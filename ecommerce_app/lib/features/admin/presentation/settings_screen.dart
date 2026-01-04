@@ -3,6 +3,8 @@ import 'package:provider/provider.dart';
 import '../../../core/state/settings_state.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/spacing.dart';
+import 'package:local_auth/local_auth.dart';
+import 'package:flutter/services.dart';
 
 class SettingsScreen extends StatelessWidget {
   const SettingsScreen({super.key});
@@ -73,7 +75,7 @@ class SettingsScreen extends StatelessWidget {
                 title: 'Login Biometrik',
                 subtitle: 'Gunakan sidik jari/wajah',
                 value: settings.isBiometricEnabled,
-                onChanged: (v) => settings.setBiometricEnabled(v),
+                onChanged: (v) => _handleBiometricToggle(context, v, settings),
               ),
               _buildNavigationTile(
                 context,
@@ -246,5 +248,43 @@ class SettingsScreen extends StatelessWidget {
           ? const Icon(Icons.check_circle, color: AppColors.primary)
           : null,
     );
+  }
+
+  Future<void> _handleBiometricToggle(BuildContext context, bool value, SettingsState settings) async {
+    if (value) {
+      // Activating: Require authentication
+      final LocalAuthentication auth = LocalAuthentication();
+      try {
+        final bool didAuthenticate = await auth.authenticate(
+          localizedReason: 'Konfirmasi identitas anda untuk mengaktifkan',
+        );
+        
+        if (didAuthenticate) {
+          settings.setBiometricEnabled(true);
+          if (context.mounted) {
+            ScaffoldMessenger.of(context).showSnackBar(
+              const SnackBar(
+                content: Text('Login biometrik diaktifkan'),
+                backgroundColor: AppColors.success,
+                behavior: SnackBarBehavior.floating,
+              ),
+            );
+          }
+        }
+      } on PlatformException catch (_) {
+        if (context.mounted) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Gagal memverifikasi biometrik'),
+              backgroundColor: AppColors.error,
+              behavior: SnackBarBehavior.floating,
+            ),
+          );
+        }
+      }
+    } else {
+      // Deactivating: Allow immediately
+      settings.setBiometricEnabled(false);
+    }
   }
 }

@@ -5,6 +5,9 @@ import 'package:provider/provider.dart';
 import '../../../core/state/auth_state.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/spacing.dart';
+import 'package:local_auth/local_auth.dart';
+import 'package:flutter/services.dart';
+import '../../../core/state/settings_state.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -20,6 +23,43 @@ class _LoginScreenState extends State<LoginScreen> {
   bool _isRegisterMode = false;
   final _nameController = TextEditingController();
   bool _obscurePassword = true;
+  final LocalAuthentication _localAuth = LocalAuthentication();
+
+  @override
+  void initState() {
+    super.initState();
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _checkBiometricLogin();
+    });
+  }
+
+  Future<void> _checkBiometricLogin() async {
+    final settings = context.read<SettingsState>();
+    if (!settings.isBiometricEnabled) return;
+
+    try {
+      final bool canCheckBiometrics = await _localAuth.canCheckBiometrics;
+      if (!canCheckBiometrics) return;
+
+      final bool didAuthenticate = await _localAuth.authenticate(
+        localizedReason: 'Silakan autentikasi untuk masuk',
+      );
+
+      if (didAuthenticate && mounted) {
+        final auth = context.read<AuthState>();
+        // logging in with pre-filled credentials for demo purposes
+        final ok = await auth.login(
+          _emailController.text,
+          _passwordController.text,
+        );
+        if (ok && mounted) {
+          context.go('/');
+        }
+      }
+    } on PlatformException catch (_) {
+      // Handle or ignore specific errors
+    }
+  }
 
   @override
   void dispose() {
@@ -70,43 +110,22 @@ class _LoginScreenState extends State<LoginScreen> {
     final auth = context.watch<AuthState>();
 
     return Scaffold(
-      body: Container(
-        decoration: const BoxDecoration(
-          gradient: LinearGradient(
-            begin: Alignment.topLeft,
-            end: Alignment.bottomRight,
-            colors: [
-              Color(0xFF667eea),
-              Color(0xFF764ba2),
-              Color(0xFFf093fb),
-            ],
-            stops: [0.0, 0.5, 1.0],
-          ),
-        ),
-        child: SafeArea(
-          child: Stack(
-            children: [
-              // Decorative circles
-              _buildDecorations(),
-              
-              // Main content
-              Center(
-                child: SingleChildScrollView(
-                  padding: const EdgeInsets.all(24),
-                  child: Column(
-                    mainAxisAlignment: MainAxisAlignment.center,
-                    children: [
-                      // Logo and welcome
-                      _buildHeader(),
-                      const SizedBox(height: 40),
-                      
-                      // Form card
-                      _buildFormCard(auth),
-                    ],
-                  ),
-                ),
-              ),
-            ],
+      backgroundColor: Colors.white,
+      body: SafeArea(
+        child: Center(
+          child: SingleChildScrollView(
+            padding: const EdgeInsets.all(24),
+            child: Column(
+              mainAxisAlignment: MainAxisAlignment.center,
+              children: [
+                // Logo and welcome
+                _buildHeader(),
+                const SizedBox(height: 48),
+                
+                // Form card
+                _buildFormCard(auth),
+              ],
+            ),
           ),
         ),
       ),
@@ -114,82 +133,43 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildDecorations() {
-    return Stack(
-      children: [
-        Positioned(
-          top: -60,
-          right: -40,
-          child: Container(
-            width: 180,
-            height: 180,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withOpacity(0.1),
-            ),
-          ).animate().scale(delay: 200.ms, curve: Curves.easeOut),
-        ),
-        Positioned(
-          bottom: -80,
-          left: -60,
-          child: Container(
-            width: 220,
-            height: 220,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withOpacity(0.08),
-            ),
-          ).animate().scale(delay: 400.ms, curve: Curves.easeOut),
-        ),
-        Positioned(
-          top: MediaQuery.of(context).size.height * 0.4,
-          right: 30,
-          child: Container(
-            width: 50,
-            height: 50,
-            decoration: BoxDecoration(
-              shape: BoxShape.circle,
-              color: Colors.white.withOpacity(0.12),
-            ),
-          ).animate().scale(delay: 600.ms, curve: Curves.elasticOut),
-        ),
-      ],
-    );
+    return const SizedBox.shrink(); // Removed decorative circles
   }
 
   Widget _buildHeader() {
     return Column(
       children: [
         Container(
-          width: 90,
-          height: 90,
+          width: 80,
+          height: 80,
           decoration: BoxDecoration(
-            color: Colors.white,
-            borderRadius: BorderRadius.circular(24),
+            color: AppColors.primary,
+            borderRadius: BorderRadius.circular(20),
             boxShadow: [
               BoxShadow(
-                color: Colors.black.withOpacity(0.15),
-                blurRadius: 30,
+                color: AppColors.primary.withOpacity(0.3),
+                blurRadius: 20,
                 offset: const Offset(0, 10),
               ),
             ],
           ),
           child: const Icon(
-            Icons.shopping_bag_rounded,
-            size: 48,
-            color: Color(0xFF667eea),
+            Icons.shopping_bag_outlined,
+            size: 40,
+            color: Colors.white,
           ),
         ).animate()
           .scale(duration: 500.ms, curve: Curves.elasticOut)
           .fadeIn(),
         
-        const SizedBox(height: 24),
+        const SizedBox(height: 32),
         
         Text(
-          _isRegisterMode ? 'Buat Akun Baru' : 'Selamat Datang 👋',
-          style: const TextStyle(
+          _isRegisterMode ? 'Buat Akun Baru' : 'Selamat Datang',
+          style: TextStyle(
             fontSize: 28,
             fontWeight: FontWeight.w800,
-            color: Colors.white,
+            color: AppColors.textPrimary,
             letterSpacing: -0.5,
           ),
         ).animate()
@@ -204,7 +184,7 @@ class _LoginScreenState extends State<LoginScreen> {
             : 'Masuk untuk melanjutkan',
           style: TextStyle(
             fontSize: 16,
-            color: Colors.white.withOpacity(0.85),
+            color: AppColors.textSecondary,
           ),
         ).animate()
           .fadeIn(delay: 300.ms)
@@ -290,6 +270,10 @@ class _LoginScreenState extends State<LoginScreen> {
             
             // Submit button
             _buildSubmitButton(auth),
+            
+            // Biometric button
+            if (!_isRegisterMode) _buildBiometricButton(),
+            
             const SizedBox(height: 20),
             
             // Toggle mode
@@ -370,49 +354,58 @@ class _LoginScreenState extends State<LoginScreen> {
   }
 
   Widget _buildSubmitButton(AuthState auth) {
-    return Container(
+    return SizedBox(
       height: 56,
-      decoration: BoxDecoration(
-        gradient: const LinearGradient(
-          colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-        ),
-        borderRadius: BorderRadius.circular(14),
-        boxShadow: [
-          BoxShadow(
-            color: const Color(0xFF667eea).withOpacity(0.4),
-            blurRadius: 20,
-            offset: const Offset(0, 8),
+      child: ElevatedButton(
+        onPressed: auth.isLoading ? null : _submit,
+        style: ElevatedButton.styleFrom(
+          backgroundColor: AppColors.primary,
+          foregroundColor: Colors.white,
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(14),
           ),
-        ],
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: auth.isLoading ? null : _submit,
-          borderRadius: BorderRadius.circular(14),
-          child: Center(
-            child: auth.isLoading
-              ? const SizedBox(
-                  width: 24,
-                  height: 24,
-                  child: CircularProgressIndicator(
-                    strokeWidth: 2.5,
-                    valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
-                  ),
-                )
-              : Text(
-                  _isRegisterMode ? 'Daftar' : 'Masuk',
-                  style: const TextStyle(
-                    color: Colors.white,
-                    fontSize: 17,
-                    fontWeight: FontWeight.w700,
-                    letterSpacing: 0.3,
-                  ),
-                ),
-          ),
+          elevation: 5,
+          shadowColor: AppColors.primary.withOpacity(0.4),
         ),
+        child: auth.isLoading
+          ? const SizedBox(
+              width: 24,
+              height: 24,
+              child: CircularProgressIndicator(
+                strokeWidth: 2.5,
+                valueColor: AlwaysStoppedAnimation<Color>(Colors.white),
+              ),
+            )
+          : Text(
+              _isRegisterMode ? 'Daftar' : 'Masuk',
+              style: const TextStyle(
+                fontSize: 17,
+                fontWeight: FontWeight.w700,
+                letterSpacing: 0.3,
+              ),
+            ),
       ),
     );
+  }
+
+  Widget _buildBiometricButton() {
+     final settings = context.read<SettingsState>();
+     if (!settings.isBiometricEnabled) return const SizedBox.shrink();
+
+     return Center(
+       child: Padding(
+         padding: const EdgeInsets.only(top: 16),
+         child: IconButton(
+           onPressed: _checkBiometricLogin,
+           icon: const Icon(Icons.fingerprint, size: 32, color: AppColors.primary),
+           tooltip: 'Login dengan Biometrik',
+           style: IconButton.styleFrom(
+             backgroundColor: AppColors.primary.withAlpha(20),
+             padding: const EdgeInsets.all(12),
+           ),
+         ),
+       ),
+     );
   }
 
   Widget _buildToggleMode() {

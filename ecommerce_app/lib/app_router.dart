@@ -16,6 +16,7 @@ import 'features/catalog/presentation/search_screen.dart';
 import 'features/checkout/presentation/checkout_screen.dart';
 import 'features/checkout/presentation/order_success_screen.dart';
 import 'features/orders/presentation/orders_screen.dart';
+import 'features/orders/presentation/order_detail_screen.dart';
 
 /// App Router Configuration with persistent bottom navigation
 GoRouter createRouter(AuthState authState) {
@@ -95,6 +96,16 @@ GoRouter createRouter(AuthState authState) {
                 path: '/orders',
                 name: 'orders',
                 builder: (context, state) => const OrdersScreen(),
+                routes: [
+                  GoRoute(
+                    path: ':id',
+                    name: 'order_detail',
+                    builder: (context, state) {
+                      final id = state.pathParameters['id']!;
+                      return OrderDetailScreen(orderId: id);
+                    },
+                  ),
+                ],
               ),
             ],
           ),

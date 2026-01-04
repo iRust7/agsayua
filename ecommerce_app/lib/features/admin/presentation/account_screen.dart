@@ -115,138 +115,92 @@ class _AccountScreenState extends State<AccountScreen> {
     final displayName = _profileName ?? auth.user?.fullName ?? 'Guest User';
     
     return SliverAppBar(
-      expandedHeight: 200,
+      expandedHeight: 180,
       floating: false,
       pinned: true,
-      backgroundColor: const Color(0xFF667eea),
+      backgroundColor: AppColors.primary,
+      elevation: 0,
       flexibleSpace: FlexibleSpaceBar(
         background: Container(
-          decoration: const BoxDecoration(
-            gradient: LinearGradient(
-              begin: Alignment.topLeft,
-              end: Alignment.bottomRight,
-              colors: [Color(0xFF667eea), Color(0xFF764ba2)],
-            ),
-          ),
-          child: Stack(
+          color: AppColors.primary,
+          child: Column(
+            mainAxisAlignment: MainAxisAlignment.center,
             children: [
-              // Decorative circles
-              Positioned(
-                top: -40,
-                right: -30,
-                child: Container(
-                  width: 150,
-                  height: 150,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withAlpha(25),
-                  ),
-                ),
-              ),
-              Positioned(
-                bottom: 20,
-                left: -50,
-                child: Container(
-                  width: 120,
-                  height: 120,
-                  decoration: BoxDecoration(
-                    shape: BoxShape.circle,
-                    color: Colors.white.withAlpha(20),
-                  ),
-                ),
-              ),
-              
-              // User info - centered
-              Center(
-                child: Padding(
-                  padding: const EdgeInsets.only(top: 60),
-                  child: Column(
-                    mainAxisSize: MainAxisSize.min,
-                    children: [
-                      // Tappable avatar
-                      GestureDetector(
-                        onTap: () async {
-                          await context.push('/account/edit');
-                          _loadProfileData(); // Reload after edit
-                        },
-                        child: Stack(
-                          children: [
-                            Container(
-                              width: 72,
-                              height: 72,
-                              decoration: BoxDecoration(
-                                color: Colors.white,
-                                shape: BoxShape.circle,
-                                image: _profilePhotoPath != null
-                                    ? DecorationImage(
-                                        image: FileImage(File(_profilePhotoPath!)),
-                                        fit: BoxFit.cover,
-                                      )
-                                    : null,
-                                boxShadow: [
-                                  BoxShadow(
-                                    color: Colors.black.withAlpha(50),
-                                    blurRadius: 20,
-                                    offset: const Offset(0, 10),
-                                  ),
-                                ],
-                              ),
-                              child: _profilePhotoPath == null
-                                  ? const Icon(
-                                      Icons.person_rounded,
-                                      size: 40,
-                                      color: Color(0xFF667eea),
-                                    )
-                                  : null,
-                            ),
-                            // Edit badge
-                            Positioned(
-                              bottom: 0,
-                              right: 0,
-                              child: Container(
-                                width: 24,
-                                height: 24,
-                                decoration: BoxDecoration(
-                                  color: Colors.white,
-                                  shape: BoxShape.circle,
-                                  border: Border.all(color: const Color(0xFF667eea), width: 2),
-                                ),
-                                child: const Icon(
-                                  Icons.edit,
-                                  size: 12,
-                                  color: Color(0xFF667eea),
-                                ),
-                              ),
-                            ),
-                          ],
-                        ),
-                      ),
-                      const SizedBox(height: 12),
-                      Text(
-                        displayName,
-                        style: const TextStyle(
-                          color: Colors.white,
-                          fontSize: 20,
-                          fontWeight: FontWeight.w700,
-                        ),
-                      ),
-                      const SizedBox(height: 4),
-                      Container(
-                        padding: const EdgeInsets.symmetric(horizontal: 12, vertical: 4),
-                        decoration: BoxDecoration(
-                          color: Colors.white.withAlpha(50),
-                          borderRadius: BorderRadius.circular(20),
-                        ),
-                        child: Text(
-                          auth.user?.email ?? 'guest@ecommerce.com',
-                          style: TextStyle(
-                            color: Colors.white.withAlpha(230),
-                            fontSize: 13,
+              const SizedBox(height: 30), // Top padding
+              // Avatar
+              GestureDetector(
+                onTap: () async {
+                  await context.push('/account/edit');
+                  _loadProfileData(); 
+                },
+                child: Stack(
+                  children: [
+                    Container(
+                      width: 88,
+                      height: 88,
+                      decoration: BoxDecoration(
+                        color: Colors.white,
+                        shape: BoxShape.circle,
+                        border: Border.all(color: Colors.white, width: 3),
+                        image: _profilePhotoPath != null
+                            ? DecorationImage(
+                                image: FileImage(File(_profilePhotoPath!)),
+                                fit: BoxFit.cover,
+                              )
+                            : null,
+                        boxShadow: [
+                          BoxShadow(
+                            color: Colors.black.withOpacity(0.2),
+                            blurRadius: 15,
+                            offset: const Offset(0, 5),
                           ),
+                        ],
+                      ),
+                      child: _profilePhotoPath == null
+                          ? const Icon(
+                              Icons.person,
+                              size: 48,
+                              color: AppColors.neutral300,
+                            )
+                          : null,
+                    ),
+                    Positioned(
+                      bottom: 0,
+                      right: 0,
+                      child: Container(
+                        padding: const EdgeInsets.all(6),
+                        decoration: BoxDecoration(
+                          color: AppColors.accent,
+                          shape: BoxShape.circle,
+                          border: Border.all(color: Colors.white, width: 2),
+                        ),
+                        child: const Icon(
+                          Icons.edit,
+                          size: 14,
+                          color: AppColors.primary,
                         ),
                       ),
-                    ],
-                  ),
+                    ),
+                  ],
+                ),
+              ),
+              const SizedBox(height: 16),
+              Text(
+                displayName,
+                style: const TextStyle(
+                  color: Colors.white,
+                  fontSize: 22,
+                  fontWeight: FontWeight.bold,
+                  letterSpacing: 0.5,
+                ),
+              ),
+              const SizedBox(height: 4),
+              Text(
+                auth.user?.email ?? 'guest@ecommerce.com',
+                style: TextStyle(
+                  color: Colors.white.withOpacity(0.8),
+                  fontSize: 14,
+                  fontWeight: FontWeight.w500,
                 ),
               ),
             ],
@@ -260,12 +214,12 @@ class _AccountScreenState extends State<AccountScreen> {
   Widget _buildMenuCard(BuildContext context, {required List<_MenuItem> items}) {
     return Container(
       decoration: BoxDecoration(
-        color: Theme.of(context).cardColor,
-        borderRadius: BorderRadius.circular(20),
+        color: Colors.white,
+        borderRadius: BorderRadius.circular(16),
         boxShadow: [
           BoxShadow(
-            color: AppColors.cardShadow,
-            blurRadius: 20,
+            color: Colors.black.withOpacity(0.04), // Softer shadow
+            blurRadius: 24,
             offset: const Offset(0, 8),
           ),
         ],
@@ -283,23 +237,23 @@ class _AccountScreenState extends State<AccountScreen> {
                 child: InkWell(
                   onTap: item.onTap,
                   borderRadius: BorderRadius.vertical(
-                    top: index == 0 ? const Radius.circular(20) : Radius.zero,
-                    bottom: isLast ? const Radius.circular(20) : Radius.zero,
+                    top: index == 0 ? const Radius.circular(16) : Radius.zero,
+                    bottom: isLast ? const Radius.circular(16) : Radius.zero,
                   ),
                   child: Padding(
-                    padding: const EdgeInsets.all(16),
+                    padding: const EdgeInsets.symmetric(horizontal: 20, vertical: 16),
                     child: Row(
                       children: [
                         Container(
-                          width: 48,
-                          height: 48,
+                          width: 44,
+                          height: 44,
                           decoration: BoxDecoration(
-                            color: item.color.withAlpha(30),
-                            borderRadius: BorderRadius.circular(14),
+                            color: item.color.withOpacity(0.1),
+                            borderRadius: BorderRadius.circular(12),
                           ),
-                          child: Icon(item.icon, color: item.color, size: 24),
+                          child: Icon(item.icon, color: item.color, size: 22),
                         ),
-                        const SizedBox(width: 14),
+                        const SizedBox(width: 16),
                         Expanded(
                           child: Column(
                             crossAxisAlignment: CrossAxisAlignment.start,
@@ -309,22 +263,26 @@ class _AccountScreenState extends State<AccountScreen> {
                                 style: const TextStyle(
                                   fontSize: 16,
                                   fontWeight: FontWeight.w600,
+                                  color: AppColors.textPrimary,
                                 ),
                               ),
-                              const SizedBox(height: 2),
-                              Text(
-                                item.subtitle,
-                                style: TextStyle(
-                                  fontSize: 13,
-                                  color: Theme.of(context).textTheme.bodySmall?.color,
+                              if (item.subtitle.isNotEmpty) ...[
+                                const SizedBox(height: 2),
+                                Text(
+                                  item.subtitle,
+                                  style: const TextStyle(
+                                    fontSize: 12,
+                                    color: AppColors.textSecondary,
+                                  ),
                                 ),
-                              ),
+                              ],
                             ],
                           ),
                         ),
                         const Icon(
                           Icons.chevron_right_rounded,
-                          color: AppColors.neutral400,
+                          color: AppColors.neutral300,
+                          size: 20,
                         ),
                       ],
                     ),
@@ -332,7 +290,7 @@ class _AccountScreenState extends State<AccountScreen> {
                 ),
               ),
               if (!isLast)
-                const Divider(height: 1, indent: 78, color: AppColors.divider),
+                Divider(height: 1, indent: 80, endIndent: 20, color: AppColors.neutral100),
             ],
           );
         }).toList(),
@@ -341,38 +299,35 @@ class _AccountScreenState extends State<AccountScreen> {
   }
 
   Widget _buildLogoutButton(BuildContext context, AuthState auth) {
-    return Container(
-      decoration: BoxDecoration(
-        color: AppColors.errorLight,
-        borderRadius: BorderRadius.circular(20),
-        border: Border.all(color: AppColors.error.withAlpha(50)),
-      ),
-      child: Material(
-        color: Colors.transparent,
-        child: InkWell(
-          onTap: () {
-            auth.logout();
-            context.go('/login');
-          },
-          borderRadius: BorderRadius.circular(20),
-          child: const Padding(
-            padding: EdgeInsets.symmetric(vertical: 16),
-            child: Row(
-              mainAxisAlignment: MainAxisAlignment.center,
-              children: [
-                Icon(Icons.logout_rounded, color: AppColors.error),
-                SizedBox(width: 10),
-                Text(
-                  'Keluar',
-                  style: TextStyle(
-                    color: AppColors.error,
-                    fontSize: 16,
-                    fontWeight: FontWeight.w600,
-                  ),
-                ),
-              ],
-            ),
+    return Padding(
+      padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
+      child: OutlinedButton(
+        onPressed: () {
+             auth.logout();
+             context.go('/login');
+        },
+        style: OutlinedButton.styleFrom(
+          side: const BorderSide(color: AppColors.error, width: 1.5),
+          padding: const EdgeInsets.symmetric(vertical: 16),
+          shape: RoundedRectangleBorder(
+            borderRadius: BorderRadius.circular(16),
           ),
+          foregroundColor: AppColors.error,
+          backgroundColor: Colors.white,
+        ),
+        child: const Row(
+          mainAxisAlignment: MainAxisAlignment.center,
+          children: [
+            Icon(Icons.logout_rounded, size: 20),
+            SizedBox(width: 8),
+            Text(
+              'Keluar Akun',
+              style: TextStyle(
+                fontSize: 16,
+                fontWeight: FontWeight.w700,
+              ),
+            ),
+          ],
         ),
       ),
     );

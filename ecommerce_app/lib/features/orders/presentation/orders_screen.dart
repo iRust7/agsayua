@@ -1,6 +1,7 @@
 import 'package:flutter/material.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import 'package:go_router/go_router.dart';
 import '../../../core/state/order_state.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/widgets/empty_state.dart';
@@ -197,7 +198,10 @@ class _OrderCard extends StatelessWidget {
                   ),
                 ),
                 OutlinedButton(
-                  onPressed: () {},
+                  onPressed: () => context.goNamed(
+                    'order_detail',
+                    pathParameters: {'id': order.id},
+                  ),
                   style: OutlinedButton.styleFrom(
                     foregroundColor: AppColors.primary,
                     side: const BorderSide(color: AppColors.primary),

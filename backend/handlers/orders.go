@@ -3,7 +3,6 @@ package handlers
 import (
 	"encoding/json"
 	"net/http"
-	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -203,44 +202,5 @@ func (h *Handler) GetOrders(w http.ResponseWriter, r *http.Request) {
 	respondSuccess(w, orders)
 }
 
-func (h *Handler) UpdateOrderStatus(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id := vars["id"]
-
-	var req struct {
-		Status string `json:"status"`
-	}
-	if err := json.NewDecoder(r.Body).Decode(&req); err != nil {
-		respondError(w, http.StatusBadRequest, "Invalid request body")
-		return
-	}
-
-	// Validate status
-	validStatuses := map[string]bool{
-		"pending":    true,
-		"processing": true,
-		"shipped":    true,
-		"delivered":  true,
-		"cancelled":  true,
-	}
-	if !validStatuses[req.Status] {
-		respondError(w, http.StatusBadRequest, "Invalid status")
-		return
-	}
-
-	_, err := h.DB.Exec("UPDATE orders SET status = ? WHERE id = ?", req.Status, id)
-	if err != nil {
-		respondError(w, http.StatusInternalServerError, "Failed to update order status")
-		return
-	}
-
-	idInt, _ := strconv.Atoi(id)
-	respondJSON(w, http.StatusOK, Response{
-		Success: true,
-		Data: map[string]interface{}{
-			"id":     idInt,
-			"status": req.Status,
-		},
-		Message: "Order status updated successfully",
-	})
-}
+// Note: UpdateOrderStatus has been moved to admin_orders.go
+// for proper admin access control. Use the admin endpoint for this operation.

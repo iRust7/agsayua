@@ -1,6 +1,7 @@
 import 'package:go_router/go_router.dart';
 import 'core/state/auth_state.dart';
 import 'core/widgets/navigation_shell.dart';
+import 'core/widgets/admin_navigation_shell.dart';
 import 'features/admin/presentation/account_screen.dart';
 import 'features/admin/presentation/address_screen.dart';
 import 'features/admin/presentation/edit_profile_screen.dart';
@@ -8,6 +9,10 @@ import 'features/admin/presentation/notification_screen.dart';
 import 'features/admin/presentation/payment_methods_screen.dart';
 import 'features/admin/presentation/help_screen.dart';
 import 'features/admin/presentation/settings_screen.dart';
+import 'features/admin_dashboard/presentation/admin_dashboard_screen.dart';
+import 'features/admin_dashboard/presentation/admin_products_screen.dart';
+import 'features/admin_dashboard/presentation/add_product_screen.dart';
+import 'features/admin_dashboard/presentation/admin_orders_screen.dart';
 import 'features/auth/presentation/login_screen.dart';
 import 'features/cart/presentation/cart_screen.dart';
 import 'features/catalog/presentation/home_screen.dart';
@@ -25,9 +30,19 @@ GoRouter createRouter(AuthState authState) {
     refreshListenable: authState,
     redirect: (context, state) {
       final loggedIn = authState.isLoggedIn;
+      final isAdmin = authState.isAdmin;
       final loggingIn = state.matchedLocation == '/login';
+      final isAdminRoute = state.matchedLocation.startsWith('/admin');
+      
       if (!loggedIn && !loggingIn) return '/login';
-      if (loggedIn && loggingIn) return '/';
+      if (loggedIn && loggingIn) {
+        // Redirect to appropriate home based on role
+        return isAdmin ? '/admin' : '/';
+      }
+      
+      // Prevent non-admin users from accessing admin routes
+      if (isAdminRoute && !isAdmin) return '/';
+      
       return null;
     },
     routes: [
@@ -49,6 +64,76 @@ GoRouter createRouter(AuthState authState) {
           return OrderSuccessScreen(orderId: orderId);
         },
       ),
+      // Admin sub-routes (not in navigation shell)
+      GoRoute(
+        path: '/admin/products/add',
+        name: 'admin_add_product',
+        builder: (context, state) => const AddProductScreen(),
+      ),
+      GoRoute(
+        path: '/admin/products/edit/:id',
+        name: 'admin_edit_product',
+        builder: (context, state) {
+          final id = state.pathParameters['id']!;
+          return AddProductScreen(productId: id);
+        },
+      ),
+      // Admin Routes with Navigation Shell
+      StatefulShellRoute.indexedStack(
+        builder: (context, state, navigationShell) =>
+            AdminNavigationShell(navigationShell: navigationShell),
+        branches: [
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/admin',
+                name: 'admin_dashboard',
+                builder: (context, state) => const AdminDashboardScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/admin/products',
+                name: 'admin_products',
+                builder: (context, state) => const AdminProductsScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/admin/orders',
+                name: 'admin_orders',
+                builder: (context, state) => const AdminOrdersScreen(),
+              ),
+            ],
+          ),
+          StatefulShellBranch(
+            routes: [
+              GoRoute(
+                path: '/admin/account',
+                name: 'admin_account',
+                builder: (context, state) => const AccountScreen(),
+                routes: [
+                  GoRoute(
+                    path: 'edit',
+                    name: 'admin_edit_profile',
+                    builder: (context, state) => const EditProfileScreen(),
+                  ),
+                  GoRoute(
+                    path: 'settings',
+                    name: 'admin_settings',
+                    builder: (context, state) => const SettingsScreen(),
+                  ),
+                ],
+              ),
+            ],
+          ),
+        ],
+      ),
+      // Regular User Routes with Navigation Shell
       StatefulShellRoute.indexedStack(
         builder: (context, state, navigationShell) =>
             AppNavigationShell(navigationShell: navigationShell),

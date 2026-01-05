@@ -1,9 +1,7 @@
 package handlers
 
 import (
-	"encoding/json"
 	"net/http"
-	"strconv"
 
 	"github.com/gorilla/mux"
 )
@@ -110,73 +108,5 @@ func (h *Handler) GetProductsByCategory(w http.ResponseWriter, r *http.Request) 
 	respondSuccess(w, products)
 }
 
-func (h *Handler) CreateProduct(w http.ResponseWriter, r *http.Request) {
-	var p Product
-	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
-		respondError(w, http.StatusBadRequest, "Invalid request body")
-		return
-	}
-
-	result, err := h.DB.Exec(
-		"INSERT INTO products (category_id, name, description, price, stock, image_url) VALUES (?, ?, ?, ?, ?, ?)",
-		p.CategoryID, p.Name, p.Description, p.Price, p.Stock, p.ImageURL,
-	)
-	if err != nil {
-		respondError(w, http.StatusInternalServerError, "Failed to create product")
-		return
-	}
-
-	id, _ := result.LastInsertId()
-	p.ID = int(id)
-
-	respondJSON(w, http.StatusCreated, Response{
-		Success: true,
-		Data:    p,
-		Message: "Product created successfully",
-	})
-}
-
-func (h *Handler) UpdateProduct(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id := vars["id"]
-
-	var p Product
-	if err := json.NewDecoder(r.Body).Decode(&p); err != nil {
-		respondError(w, http.StatusBadRequest, "Invalid request body")
-		return
-	}
-
-	_, err := h.DB.Exec(
-		"UPDATE products SET category_id = ?, name = ?, description = ?, price = ?, stock = ?, image_url = ? WHERE id = ?",
-		p.CategoryID, p.Name, p.Description, p.Price, p.Stock, p.ImageURL, id,
-	)
-	if err != nil {
-		respondError(w, http.StatusInternalServerError, "Failed to update product")
-		return
-	}
-
-	idInt, _ := strconv.Atoi(id)
-	p.ID = idInt
-
-	respondJSON(w, http.StatusOK, Response{
-		Success: true,
-		Data:    p,
-		Message: "Product updated successfully",
-	})
-}
-
-func (h *Handler) DeleteProduct(w http.ResponseWriter, r *http.Request) {
-	vars := mux.Vars(r)
-	id := vars["id"]
-
-	_, err := h.DB.Exec("DELETE FROM products WHERE id = ?", id)
-	if err != nil {
-		respondError(w, http.StatusInternalServerError, "Failed to delete product")
-		return
-	}
-
-	respondJSON(w, http.StatusOK, Response{
-		Success: true,
-		Message: "Product deleted successfully",
-	})
-}
+// Note: CreateProduct, UpdateProduct, DeleteProduct have been moved to admin_products.go
+// for proper admin access control. Use the admin endpoints for these operations.

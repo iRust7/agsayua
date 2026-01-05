@@ -1,5 +1,6 @@
 import 'dart:io';
 import 'package:flutter/material.dart';
+import 'package:go_router/go_router.dart';
 import 'package:image_picker/image_picker.dart';
 import 'package:path_provider/path_provider.dart';
 import 'package:provider/provider.dart';
@@ -28,39 +29,70 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     _loadProfile();
   }
 
+  @override
+  void dispose() {
+    _nameController.dispose();
+    _phoneController.dispose();
+    super.dispose();
+  }
+
   Future<void> _loadProfile() async {
     final prefs = await SharedPreferences.getInstance();
     final auth = context.read<AuthState>();
+    final userId = auth.user?.id ?? 0;
     
-    setState(() {
-      _nameController.text = prefs.getString('profile_name') ?? auth.user?.fullName ?? '';
-      _phoneController.text = prefs.getString('profile_phone') ?? '';
-      _profilePhotoPath = prefs.getString('profile_photo');
-    });
+    if (mounted) {
+      setState(() {
+        _nameController.text = prefs.getString('profile_name_$userId') ?? auth.user?.fullName ?? '';
+        _phoneController.text = prefs.getString('profile_phone_$userId') ?? '';
+        _profilePhotoPath = prefs.getString('profile_photo_$userId');
+      });
+    }
   }
 
   Future<void> _saveProfile() async {
+    if (_isLoading) return;
     if (!_formKey.currentState!.validate()) return;
     
     setState(() => _isLoading = true);
     
     final prefs = await SharedPreferences.getInstance();
-    await prefs.setString('profile_name', _nameController.text.trim());
-    await prefs.setString('profile_phone', _phoneController.text.trim());
-    if (_profilePhotoPath != null) {
-      await prefs.setString('profile_photo', _profilePhotoPath!);
+    final auth = context.read<AuthState>();
+    final userId = auth.user?.id ?? 0;
+    
+    final success = await auth.updateProfile(
+      fullName: _nameController.text.trim(),
+      phone: _phoneController.text.trim(),
+    );
+    
+    if (success && _profilePhotoPath != null) {
+       // Photo is still local-only for now as per minimal scope, but we persist the path
+       final prefs = await SharedPreferences.getInstance();
+       await prefs.setString('profile_photo_$userId', _profilePhotoPath!);
     }
     
     setState(() => _isLoading = false);
     
     if (mounted) {
-      ScaffoldMessenger.of(context).showSnackBar(
-        const SnackBar(
-          content: Text('Profil berhasil disimpan!'),
-          backgroundColor: AppColors.success,
-        ),
-      );
-      Navigator.pop(context);
+      if (success) {
+        // Only pop if this route is still the current one (user didn't swipe back)
+        if (mounted && (ModalRoute.of(context)?.isCurrent ?? false)) {
+          ScaffoldMessenger.of(context).showSnackBar(
+            const SnackBar(
+              content: Text('Profil berhasil diperbarui!'),
+              backgroundColor: AppColors.success,
+            ),
+          );
+          context.pop();
+        }
+      } else {
+        ScaffoldMessenger.of(context).showSnackBar(
+          SnackBar(
+            content: Text(auth.error ?? 'Gagal memperbarui profil'),
+            backgroundColor: AppColors.error,
+          ),
+        );
+      }
     }
   }
 
@@ -130,13 +162,6 @@ class _EditProfileScreenState extends State<EditProfileScreen> {
     setState(() {
       _profilePhotoPath = savedImage.path;
     });
-  }
-
-  @override
-  void dispose() {
-    _nameController.dispose();
-    _phoneController.dispose();
-    super.dispose();
   }
 
   @override

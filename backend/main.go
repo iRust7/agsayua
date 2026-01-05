@@ -45,19 +45,15 @@ func main() {
 	api.HandleFunc("/categories", h.GetCategories).Methods("GET")
 	api.HandleFunc("/categories/{id}", h.GetCategoryByID).Methods("GET")
 
-	// Products
+	// Products (read-only for customers)
 	api.HandleFunc("/products", h.GetProducts).Methods("GET")
 	api.HandleFunc("/products/{id}", h.GetProductByID).Methods("GET")
 	api.HandleFunc("/products/category/{categoryId}", h.GetProductsByCategory).Methods("GET")
-	api.HandleFunc("/products", h.CreateProduct).Methods("POST")
-	api.HandleFunc("/products/{id}", h.UpdateProduct).Methods("PUT")
-	api.HandleFunc("/products/{id}", h.DeleteProduct).Methods("DELETE")
 
 	// Orders
 	api.HandleFunc("/orders", h.CreateOrder).Methods("POST")
 	api.HandleFunc("/orders/{id}", h.GetOrderByID).Methods("GET")
 	api.HandleFunc("/orders", h.GetOrders).Methods("GET")
-	api.HandleFunc("/orders/{id}/status", h.UpdateOrderStatus).Methods("PUT")
 
 	// User scoped routes
 	userRoutes := api.PathPrefix("/users/{userId}").Subrouter()
@@ -65,6 +61,24 @@ func main() {
 	userRoutes.HandleFunc("/addresses", h.CreateAddress).Methods("POST")
 	userRoutes.HandleFunc("/notifications", h.GetNotifications).Methods("GET")
 	userRoutes.HandleFunc("/notifications/{notificationId}/read", h.MarkNotificationRead).Methods("PUT")
+	userRoutes.HandleFunc("/profile", h.UpdateProfile).Methods("PUT")
+
+	// Admin routes (protected)
+	admin := api.PathPrefix("/admin").Subrouter()
+
+	// Admin - Products
+	admin.HandleFunc("/products", h.AdminMiddleware(h.GetAllProducts)).Methods("GET")
+	admin.HandleFunc("/products", h.AdminMiddleware(h.CreateProduct)).Methods("POST")
+	admin.HandleFunc("/products/{id}", h.AdminMiddleware(h.UpdateProduct)).Methods("PUT")
+	admin.HandleFunc("/products/{id}", h.AdminMiddleware(h.DeleteProduct)).Methods("DELETE")
+
+	// Admin - Orders
+	admin.HandleFunc("/orders", h.AdminMiddleware(h.GetAllOrders)).Methods("GET")
+	admin.HandleFunc("/orders/{id}", h.AdminMiddleware(h.GetOrderDetails)).Methods("GET")
+	admin.HandleFunc("/orders/{id}/status", h.AdminMiddleware(h.UpdateOrderStatus)).Methods("PUT")
+
+	// Admin - Dashboard
+	admin.HandleFunc("/dashboard/stats", h.AdminMiddleware(h.GetDashboardStats)).Methods("GET")
 
 	// CORS
 	c := cors.New(cors.Options{

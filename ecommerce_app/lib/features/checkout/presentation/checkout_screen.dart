@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:intl/intl.dart';
 import 'package:provider/provider.dart';
+import '../../../core/state/auth_state.dart';
 import '../../../core/state/cart_state.dart';
 import '../../../core/state/order_state.dart';
 import '../../../core/theme/colors.dart';
@@ -493,8 +494,13 @@ class _CheckoutScreenState extends State<CheckoutScreen> {
         quantity: item.quantity,
       )).toList();
       
+      // Get current user ID
+      final auth = context.read<AuthState>();
+      final userId = auth.user?.id.toString() ?? '0';
+      
       // Create order via OrderState
       final orderId = orderState.createOrder(
+        userId: userId,
         items: orderItems,
         address: '${selectedAddr['name']}: ${selectedAddr['address']}',
         paymentMethod: selectedPayment,

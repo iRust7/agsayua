@@ -8,6 +8,7 @@ import '../../../core/theme/spacing.dart';
 import 'package:local_auth/local_auth.dart';
 import 'package:flutter/services.dart';
 import '../../../core/state/settings_state.dart';
+import '../../../core/state/order_state.dart';
 
 class LoginScreen extends StatefulWidget {
   const LoginScreen({super.key});
@@ -47,10 +48,12 @@ class _LoginScreenState extends State<LoginScreen> {
 
       if (didAuthenticate && mounted) {
         final auth = context.read<AuthState>();
+        final orderState = context.read<OrderState>();
         // logging in with pre-filled credentials for demo purposes
         final ok = await auth.login(
           _emailController.text,
           _passwordController.text,
+          orderState: orderState,
         );
         if (ok && mounted) {
           context.go('/');
@@ -87,9 +90,11 @@ class _LoginScreenState extends State<LoginScreen> {
         fullName: _nameController.text.trim(),
       );
     } else {
+      final orderState = context.read<OrderState>();
       ok = await auth.login(
         _emailController.text.trim(),
         _passwordController.text,
+        orderState: orderState,
       );
     }
     
@@ -130,10 +135,6 @@ class _LoginScreenState extends State<LoginScreen> {
         ),
       ),
     );
-  }
-
-  Widget _buildDecorations() {
-    return const SizedBox.shrink(); // Removed decorative circles
   }
 
   Widget _buildHeader() {

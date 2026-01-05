@@ -305,31 +305,4 @@ class CartScreen extends StatelessWidget {
       ),
     );
   }
-
-  void _showCheckoutDialog(BuildContext context, CartState cart) {
-    showDialog(
-      context: context,
-      builder: (context) => AlertDialog(
-        shape: RoundedRectangleBorder(borderRadius: BorderRadius.circular(20)),
-        title: const Row(
-          children: [
-            Icon(Icons.check_circle, color: AppColors.success, size: 28),
-            SizedBox(width: 10),
-            Text('Pesanan Berhasil!'),
-          ],
-        ),
-        content: const Text('Terima kasih! Pesanan Anda sedang diproses.'),
-        actions: [
-          ElevatedButton(
-            onPressed: () {
-              cart.clear();
-              Navigator.pop(context);
-              context.go('/orders');
-            },
-            child: const Text('Lihat Pesanan'),
-          ),
-        ],
-      ),
-    );
-  }
 }

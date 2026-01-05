@@ -2,6 +2,7 @@ import 'package:flutter/material.dart';
 import 'package:go_router/go_router.dart';
 import 'package:provider/provider.dart';
 import '../state/auth_state.dart';
+import '../state/order_state.dart';
 import '../theme/colors.dart';
 
 /// Global Debug FAB that appears on all screens
@@ -161,7 +162,8 @@ class _GlobalDebugFabState extends State<GlobalDebugFab>
   Future<void> _quickLogin(BuildContext context) async {
     _toggle();
     final auth = context.read<AuthState>();
-    final ok = await auth.login('user@example.com', 'Password123!');
+    final orderState = context.read<OrderState>();
+    final ok = await auth.login('user@example.com', 'Password123!', orderState: orderState);
     if (context.mounted) {
       ScaffoldMessenger.of(context).showSnackBar(
         SnackBar(

@@ -9,22 +9,28 @@ import 'package:flutter/material.dart';
 import 'package:flutter_test/flutter_test.dart';
 
 import 'package:ecommerce_app/main.dart';
+import 'package:ecommerce_app/core/state/auth_state.dart';
+import 'package:ecommerce_app/core/state/cart_state.dart';
+import 'package:ecommerce_app/core/state/order_state.dart';
+import 'package:ecommerce_app/core/state/settings_state.dart';
 
 void main() {
-  testWidgets('Counter increments smoke test', (WidgetTester tester) async {
-    // Build our app and trigger a frame.
-    await tester.pumpWidget(const MyApp());
+  testWidgets('App initializes correctly', (WidgetTester tester) async {
+    // Create state instances
+    final authState = AuthState();
+    final cartState = CartState();
+    final orderState = OrderState();
+    final settingsState = SettingsState();
+    
+    // Build our app and trigger a frame
+    await tester.pumpWidget(MyApp(
+      authState: authState,
+      cartState: cartState,
+      orderState: orderState,
+      settingsState: settingsState,
+    ));
 
-    // Verify that our counter starts at 0.
-    expect(find.text('0'), findsOneWidget);
-    expect(find.text('1'), findsNothing);
-
-    // Tap the '+' icon and trigger a frame.
-    await tester.tap(find.byIcon(Icons.add));
-    await tester.pump();
-
-    // Verify that our counter has incremented.
-    expect(find.text('0'), findsNothing);
-    expect(find.text('1'), findsOneWidget);
+    // Verify the app widget is rendered
+    expect(find.byType(MyApp), findsOneWidget);
   });
 }

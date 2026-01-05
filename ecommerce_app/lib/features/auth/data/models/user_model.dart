@@ -11,6 +11,8 @@ class User {
     required this.role,
   });
 
+  bool get isAdmin => role == 'admin' || role == 'superadmin';
+
   factory User.fromJson(Map<String, dynamic> json) {
     return User(
       id: json['id'] as int,

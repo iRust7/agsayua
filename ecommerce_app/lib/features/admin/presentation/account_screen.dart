@@ -6,6 +6,8 @@ import 'package:shared_preferences/shared_preferences.dart';
 import '../../../core/state/auth_state.dart';
 import '../../../core/theme/colors.dart';
 import '../../../core/theme/spacing.dart';
+import '../../../core/state/cart_state.dart';
+import '../../../core/state/order_state.dart';
 
 class AccountScreen extends StatefulWidget {
   const AccountScreen({super.key});
@@ -26,15 +28,26 @@ class _AccountScreenState extends State<AccountScreen> {
 
   Future<void> _loadProfileData() async {
     final prefs = await SharedPreferences.getInstance();
-    setState(() {
-      _profilePhotoPath = prefs.getString('profile_photo');
-      _profileName = prefs.getString('profile_name');
-    });
+    final auth = context.read<AuthState>();
+    final userId = auth.user?.id ?? 0;
+    
+    if (mounted) {
+      setState(() {
+        _profilePhotoPath = prefs.getString('profile_photo_$userId');
+        _profileName = prefs.getString('profile_name_$userId');
+      });
+    }
   }
 
   @override
   Widget build(BuildContext context) {
     final auth = context.watch<AuthState>();
+    
+    // Reload profile when user changes
+    final userId = auth.user?.id ?? 0;
+    WidgetsBinding.instance.addPostFrameCallback((_) {
+      _loadProfileData();
+    });
     
     return Scaffold(
       body: CustomScrollView(
@@ -44,6 +57,12 @@ class _AccountScreenState extends State<AccountScreen> {
             padding: const EdgeInsets.fromLTRB(16, 20, 16, 120),
             sliver: SliverList(
               delegate: SliverChildListDelegate([
+                // Admin Panel Card (only for admin users)
+                if (auth.isAdmin) ...[
+                  _buildAdminPanelCard(context),
+                  const SizedBox(height: 16),
+                ],
+                
                 _buildMenuCard(
                   context,
                   items: [
@@ -303,8 +322,10 @@ class _AccountScreenState extends State<AccountScreen> {
       padding: const EdgeInsets.symmetric(horizontal: 8, vertical: 8),
       child: OutlinedButton(
         onPressed: () {
-             auth.logout();
-             context.go('/login');
+          final cart = context.read<CartState>();
+          final orders = context.read<OrderState>();
+          auth.logout(cartState: cart, orderState: orders);
+          context.go('/login');
         },
         style: OutlinedButton.styleFrom(
           side: const BorderSide(color: AppColors.error, width: 1.5),
@@ -328,6 +349,81 @@ class _AccountScreenState extends State<AccountScreen> {
               ),
             ),
           ],
+        ),
+      ),
+    );
+  }
+
+  Widget _buildAdminPanelCard(BuildContext context) {
+    return Container(
+      decoration: BoxDecoration(
+        gradient: LinearGradient(
+          colors: [AppColors.primaryDark, AppColors.primary],
+          begin: Alignment.topLeft,
+          end: Alignment.bottomRight,
+        ),
+        borderRadius: BorderRadius.circular(16),
+        boxShadow: [
+          BoxShadow(
+            color: AppColors.primary.withOpacity(0.3),
+            blurRadius: 12,
+            offset: const Offset(0, 6),
+          ),
+        ],
+      ),
+      child: Material(
+        color: Colors.transparent,
+        child: InkWell(
+          onTap: () => context.go('/admin'),
+          borderRadius: BorderRadius.circular(16),
+          child: Padding(
+            padding: const EdgeInsets.all(20),
+            child: Row(
+              children: [
+                Container(
+                  padding: const EdgeInsets.all(12),
+                  decoration: BoxDecoration(
+                    color: Colors.white.withOpacity(0.2),
+                    borderRadius: BorderRadius.circular(12),
+                  ),
+                  child: const Icon(
+                    Icons.admin_panel_settings,
+                    color: Colors.white,
+                    size: 28,
+                  ),
+                ),
+                const SizedBox(width: 16),
+                Expanded(
+                  child: Column(
+                    crossAxisAlignment: CrossAxisAlignment.start,
+                    children: [
+                      const Text(
+                        'Admin Panel',
+                        style: TextStyle(
+                          color: Colors.white,
+                          fontSize: 18,
+                          fontWeight: FontWeight.bold,
+                        ),
+                      ),
+                      const SizedBox(height: 4),
+                      Text(
+                        'Manage products, orders & users',
+                        style: TextStyle(
+                          color: Colors.white.withOpacity(0.9),
+                          fontSize: 13,
+                        ),
+                      ),
+                    ],
+                  ),
+                ),
+                Icon(
+                  Icons.arrow_forward_ios,
+                  color: Colors.white.withOpacity(0.8),
+                  size: 18,
+                ),
+              ],
+            ),
+          ),
         ),
       ),
     );

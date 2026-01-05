@@ -1,8 +1,6 @@
 import 'package:flutter/material.dart';
-import 'package:flutter_animate/flutter_animate.dart';
 import '../theme/colors.dart';
 import '../theme/spacing.dart';
-import '../theme/animations.dart';
 
 /// Primary Button with gradient and micro-interactions
 class PrimaryButton extends StatefulWidget {

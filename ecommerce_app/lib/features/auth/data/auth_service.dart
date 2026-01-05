@@ -21,11 +21,21 @@ class AuthService {
 
       throw ApiException('Gagal login. Coba lagi.');
     } catch (_) {
-      // Fallback demo login so UI tetap bisa dijelajahi saat API belum siap
+      // Fallback demo login - check if admin account
+      if (email.toLowerCase() == 'admin@ecommerce.com') {
+        return User(
+          id: 1,
+          email: email,
+          fullName: 'Admin User',
+          role: 'admin',
+        );
+      }
+      
+      // Regular user fallback
       return User(
         id: 3,
         email: email,
-        fullName: 'Guest Shopper',
+        fullName: 'Demo User',
         role: 'user',
       );
     }
@@ -71,5 +81,29 @@ class AuthService {
         'new_password': newPassword,
       },
     );
+  }
+  Future<User> updateProfile({
+    required int userId,
+    required String fullName,
+    String? phone,
+  }) async {
+    try {
+      final response = await _client.put<User>(
+        'users/$userId/profile',
+        body: {
+          'full_name': fullName,
+          'phone': phone ?? '',
+        },
+        fromJson: (data) => User.fromJson(data as Map<String, dynamic>),
+      );
+      
+      if (response.data != null) {
+        return response.data!;
+      }
+    } catch (e) {
+      rethrow;
+    }
+    
+    throw ApiException('Gagal memperbarui profil.');
   }
 }

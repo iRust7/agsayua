@@ -49,6 +49,31 @@ class MyApp extends StatefulWidget {
 class _MyAppState extends State<MyApp> {
   bool _showSplash = true;
 
+  @override
+  void initState() {
+    super.initState();
+    
+    // Listen to auth changes to update OrderState with current user
+    widget.authState.addListener(_onAuthChanged);
+  }
+
+  @override
+  void dispose() {
+    widget.authState.removeListener(_onAuthChanged);
+    super.dispose();
+  }
+
+  void _onAuthChanged() {
+    final user = widget.authState.user;
+    if (user != null) {
+      // User logged in - set current user in OrderState
+      widget.orderState.setCurrentUser(user.id.toString());
+    } else {
+      // User logged out - clear orders
+      widget.orderState.clearOrders();
+    }
+  }
+
   void _onSplashComplete() {
     setState(() {
       _showSplash = false;
